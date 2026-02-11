@@ -1,17 +1,24 @@
-FROM ubuntu:lastest AS build
+# Etapa 1: Build
+FROM ubuntu:latest AS build
 
-RUN apt-get update
-RUN apt-get install openjdk-17-jdk maven -y
+# Atualiza e instala Java 17 e Maven
+RUN apt-get update && apt-get install openjdk-17-jdk maven -y
 
+# Define a pasta de trabalho
 WORKDIR /app
 
+# Copia os arquivos
 COPY . .
 
-RUN apt-get install maven -y
-RUN mvn clean install
+# Faz o build
+RUN mvn clean install -DskipTests
 
+# Etapa 2: Run (Imagem leve)
 FROM eclipse-temurin:17-jdk-alpine
+
 EXPOSE 8080
 
-COPY --from=build /target/todolist-1.0.0.jar app.jar
+# Copia o JAR
+COPY --from=build /app/target/todolist-0.0.1-SNAPSHOT.jar app.jar
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
